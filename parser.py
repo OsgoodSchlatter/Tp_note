@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 # filename = "A.mp"
 # filename = "./other/ok/french-flag.mp"
 # filename = "./other/ok/damier.mp"
-filename = "./other/ok/french-palette.mp"
-# filename = "./other/ok/german-flag-palette.mp"
+# filename = "./other/ok/french-palette.mp"
+filename = "./other/ok/german-flag-palette.mp"
 # filename = "./bw/nok/broken-dimensions2.mp"
 # filename = "./bw/nok/missing-data.mp"
 
@@ -18,28 +18,31 @@ def readfile(filename):
     f = open(filename, "rb")  # bin
     b = f.read()
     output = binascii.hexlify(b)  # hexa
-    print(b[8:9])
+
     return (b)
 
 
-readfile(filename)
+# readfile(filename)
 
 
 def move_block(filename, b_number):
-    b = readfile(filename)
-    b = b[9:]
+
+    block_raw = readfile(filename)
+    block = block_raw[9:]
     a = 0
     blockstart = 0
-    b_len = int.from_bytes(b[blockstart:blockstart + 4], "big") + 5
+    b_len = int.from_bytes(block[blockstart:blockstart + 4], "big") + 5
     while a != b_number:
         blockstart += b_len
         a += 1
-        b_len = int.from_bytes(b[blockstart:blockstart + 4], "big") + 5
-        # print(b[blockstart:blockstart + b_len])
-    return (b[blockstart:blockstart + b_len])
+        b_len = int.from_bytes(block[blockstart:blockstart + 4], "big") + 5
+
+    # print(block[blockstart+b_len-1:blockstart+b_len])
+
+    return (block[blockstart:blockstart + b_len], block_raw)
 
 
-# move_block(filename, 3)
+move_block(filename, 1)
 
 
 def dec_to_bin(x):
@@ -57,7 +60,7 @@ def bin_to_ascii(code):
 
 def Q1(filename, id_block):
 
-    b = move_block(filename, id_block)
+    b, _ = move_block(filename, id_block)
     data_start = 5
     bloc = dict()
     bloc['largeur'] = int.from_bytes(b[data_start:data_start + 3], "big")
@@ -68,7 +71,7 @@ def Q1(filename, id_block):
     return (bloc)
 
 
-Q1(filename, 0)
+# Q1(filename, 0)
 
 #################################
 
@@ -76,10 +79,10 @@ Q1(filename, 0)
 def Q2(filename, bloc):
 
     data_start = 4
-    block_commentaire = move_block(filename, 1)
+    block_commentaire, _ = move_block(filename, 1)
     bloc['commentaires'] = block_commentaire[data_start:-1]
 
-    print(bloc)
+    # print(bloc)
     return(bloc)
 
 
@@ -90,8 +93,9 @@ def Q2(filename, bloc):
 
 def Q4_afficher_image(filename, block):
     affichage = " "
-    bloc_affichage = move_block(filename, block)
+    bloc_affichage, _ = move_block(filename, block)
     data_start = 4
+    affichage_to_return = []
 
     for line in bloc_affichage[data_start:]:
         if len(str(dec_to_bin(line))) != 8:
@@ -100,7 +104,10 @@ def Q4_afficher_image(filename, block):
 
         affichage += str(dec_to_bin(line))
         print(bin_to_ascii(affichage))
+        affichage_to_return = affichage
         affichage = " "
+
+    return(affichage_to_return)
 
 
 # Q4_afficher_image(filename, 2)
@@ -111,7 +118,7 @@ def Q4_afficher_image(filename, block):
 def Q4_afficher_image_autre(filename, block, donnees):
     type_de_pixel = donnees['type de pixels']
     largeur = donnees['largeur']
-    bloc_affichage = move_block(filename, block)
+    bloc_affichage, _ = move_block(filename, block)
     data_start = 4
     pixel = []
     image = []
@@ -136,7 +143,7 @@ def Q4_afficher_image_autre(filename, block, donnees):
             image_bonne_dimension.append(image_bonne_dimension_temp)
             j = 0
             image_bonne_dimension_temp = []
-
+    print(image_bonne_dimension)
     return(image_bonne_dimension)
 
 
@@ -154,8 +161,8 @@ def Q4_afficher_image_autre(filename, block, donnees):
 def palette(filename, id_block_P, id_block_image, donnees):
     largeur = donnees['largeur']
     data_start = 4
-    bloc_palette = move_block(filename, id_block_P)
-    bloc_image = move_block(filename, id_block_image)
+    bloc_palette, _ = move_block(filename, id_block_P)
+    bloc_image, _ = move_block(filename, id_block_image)
     palette = []
 
     couleur = []
@@ -177,11 +184,13 @@ def palette(filename, id_block_P, id_block_image, donnees):
             image.append(image_temp)
             image_temp = []
             row = 0
+    # print(image)
+    print(len(image[0]))
 
     return (image)
 
 
-# palette(filename, 1, 2, Q1(filename, 0))
+palette(filename, 1, 2, Q1(filename, 0))
 
 # plt.imshow(palette(filename, 1, 2, Q1(filename, 0)),
 #            vmin=0, vmax=255)
